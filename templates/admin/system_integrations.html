@@ -1,0 +1,8 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="page-head"><div><span class="eyebrow">Admin</span><h1>System Integrations</h1><p>Check external services used by SmartBus.</p></div></div>
+<div class="stat-grid">
+  <div class="glass stat-card"><i class="bi bi-map-fill"></i><span>Google Maps Status</span><strong>{{ 'API configured' if maps_configured else 'API missing' }}</strong><small>API working: {{ 'Ready to test' if maps_configured else 'No key' }}</small><small>Used on: Route allocation map, live tracking, driver trip map</small><small>GPS tracking status: Active</small><form method="post" action="{{ url_for('admin.test_map') }}" class="mt-2"><button class="btn btn-primary w-100">Test Map</button></form></div>
+  <div class="glass stat-card"><i class="bi bi-bell-fill"></i><span>Notifications</span><strong>In-app only</strong><small>SMS and email have been removed from SmartBus.</small><small>Booking, delay and trip alerts are logged to each user's in-app notification centre.</small></div>
+</div>
+{% endblock %}

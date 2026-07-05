@@ -1,0 +1,9 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="page-head"><div><span class="eyebrow">Admin</span><h1>System Health</h1><p>Quick service readiness overview.</p></div></div>
+<div class="stat-grid">
+{% for item in health %}
+  <div class="glass stat-card"><i class="bi {% if item.status == 'ONLINE' %}bi-check-circle{% elif item.status == 'ERROR' %}bi-x-octagon{% else %}bi-dash-circle{% endif %}"></i><span>{{ item.name }}</span><strong>{{ item.status }}</strong></div>
+{% endfor %}
+</div>
+{% endblock %}

@@ -1,0 +1,45 @@
+{% extends 'base.html' %}{% block content %}<div class="page-head"><div><span class="eyebrow">Choose your place</span><h1>Select your seats</h1><p>{{model.name if model else 'Full AC Coach'}} · {{bus.display_name if bus else 'SmartBus'}} · {{model.seat_capacity if model else 40}} seats · {{model.layout if model else '2+2'}} {{model.ac_type if model else 'Full AC'}}</p></div></div>
+
+{% if stops and stops|length > 2 %}
+<div class="glass" style="padding:22px 26px;margin-bottom:22px">
+  <span class="eyebrow">Travelling a shorter distance?</span>
+  <h3 style="margin:6px 0 2px">Board and alight at any stop</h3>
+  <p style="color:var(--muted);margin:0 0 4px">e.g. Vavuniya → Colombo instead of the full {{route.origin}} → {{route.destination}} — the fare adjusts automatically.</p>
+  <div class="stop-picker">
+    <label>Board at<select id="originStop">{% for s in stops %}<option value="{{s.id}}" {% if loop.first %}selected{% endif %}>{{s.stop_name}}</option>{% endfor %}</select></label>
+    <button type="button" class="swap-stop" id="swapStops"><i class="bi bi-arrow-left-right"></i></button>
+    <label>Alight at<select id="destStop">{% for s in stops %}<option value="{{s.id}}" {% if loop.last %}selected{% endif %}>{{s.stop_name}}</option>{% endfor %}</select></label>
+  </div>
+  <span class="leg-badge" id="legBadge"><i class="bi bi-signpost-split"></i> <span id="legText">{{route.origin}} → {{route.destination}}</span> · <b id="legFare">LKR {{fare|int}}</b> per seat</span>
+</div>
+{% endif %}
+
+<div class="legend"><span><i class="available"></i>Available</span><span><i class="selected"></i>Selected</span><span><i class="sold"></i>Sold</span><span><i class="pending"></i>Pending</span><span><i class="female" style="background:#fdf0f7;border:2px solid #e0559c"></i>Female-only</span><span><i class="blocked" style="background:#3a3f4d"></i>Blocked</span></div><div class="booking-layout"><section class="glass bus-shell"><div class="bus-front"><i class="bi bi-steering-wheel"></i><span>FRONT</span></div><div id="seatMap" class="seat-map" style="--seat-cols:{{cols_per_row or 4}}"></div></section><aside><div class="glass booking-summary"><span class="eyebrow">Your selection</span><h3 id="routeLabel">{{route_label}}</h3><div class="summary-line"><span>Date</span><b>{{travel_date}}, {{departure_time}}</b></div><div class="summary-line"><span>Selected seats</span><b id="selectedNames">None</b></div><div class="summary-line total"><span>Total</span><b id="total">LKR 0</b></div><button id="bookBtn" class="btn-primary-xl w-100" disabled>Continue to payment</button><small><i class="bi bi-shield-check"></i> Test payment only — no real money</small></div><div class="glass preview3d">{% if bus and bus.photo_url %}<img src="{{bus.photo_url}}" alt="{{bus.display_name}}" style="width:100%;height:100%;object-fit:cover;border-radius:22px">{% else %}<div class="empty" style="padding:0"><i class="bi bi-bus-front"></i><p style="margin:8px 0 0">No bus photo uploaded yet</p></div>{% endif %}</div></aside></div><input id="scheduleId" type="hidden" value="{{schedule_id}}"><input id="fareValue" type="hidden" value="{{fare}}"><input id="leftCols" type="hidden" value="{{left_cols or 2}}">
+
+<div class="modal fade" id="paymentModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content dark-modal">
+      <div class="modal-header">
+        <h5><i class="bi bi-credit-card"></i> Payment</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <form id="paymentForm">
+        <div class="modal-body">
+          <p style="color:var(--muted);font-size:13px"><i class="bi bi-shield-check"></i> Test payment gateway — no real card is charged, no real money moves.</p>
+          <div style="text-align:right;font-size:22px;font-weight:800;margin-bottom:14px" id="payAmount">LKR 0</div>
+          <label>Cardholder name<input type="text" id="cardName" placeholder="A. Silva" required autocomplete="cc-name"></label>
+          <label>Card number<input type="text" id="cardNumber" placeholder="4242 4242 4242 4242" maxlength="19" required autocomplete="cc-number"></label>
+          <div style="display:flex;gap:12px">
+            <label style="flex:1">Expiry<input type="text" id="cardExpiry" placeholder="MM/YY" maxlength="5" required autocomplete="cc-exp"></label>
+            <label style="flex:1">CVV<input type="password" id="cardCvv" placeholder="123" maxlength="4" required autocomplete="cc-csc"></label>
+          </div>
+          <div id="cardError" style="color:var(--red);font-size:12px;min-height:18px;margin-top:6px"></div>
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn-primary-xl w-100" id="payBtn"><i class="bi bi-lock-fill"></i> Pay now</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}{% block scripts %}<script src="{{url_for('static',filename='js/booking.js')}}"></script>{% endblock %}

@@ -1,0 +1,31 @@
+{% extends 'base.html' %}{% block content %}
+<div class="page-head">
+  <div>
+    <span class="eyebrow">Administration</span>
+    <h1>Seat map — {{bus.display_name}}</h1>
+    <p>{{bus.registration_no}} · {{model.name if model else 'Unassigned model'}} · {{model.layout if model else '—'}} · {{seats|length}} seats</p>
+  </div>
+  <a class="btn-primary-xl" href="{{ url_for('admin.module', module='buses') }}"><i class="bi bi-arrow-left"></i> Back to buses</a>
+</div>
+
+<div class="glass" style="padding:22px 26px">
+  <p style="color:var(--muted);margin-top:0">Click a seat to change its type. <b>Female</b> marks a ladies-only seat (shown with a pink outline to customers). <b>Blocked</b> removes it from sale entirely (e.g. a crew or driver's-side seat).</p>
+  <div class="legend" style="margin-bottom:10px">
+    <span><i style="background:#f1fbf7;border:1px solid #cfe8e0"></i>Normal</span>
+    <span><i style="background:#fdf0f7;border:2px solid #e0559c"></i>Female-only</span>
+    <span><i style="background:#3a3f4d"></i>Blocked</span>
+  </div>
+  <div class="seat-map" style="--seat-cols:{{cols_per_row}}">
+    {% for s in seats %}
+    {% set current = s.seat_type or 'normal' %}
+    {% set next_type = 'female' if current == 'normal' else ('blocked' if current == 'female' else 'normal') %}
+    <form method="post" action="{{ url_for('admin.update_seat_type', seat_id=s.id) }}" style="display:inline-block">
+      <input type="hidden" name="seat_type" value="{{ next_type }}">
+      <button type="submit" class="seat {{ '' if current == 'normal' else current }}" title="Seat {{s.seat_no}} — currently {{ current }}. Click to set to {{ next_type }}.">{{s.seat_no}}</button>
+    </form>
+    {% else %}
+    <p>No seats generated yet for this bus — check its bus model.</p>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

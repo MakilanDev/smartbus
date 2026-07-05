@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="page-head reveal in">
+  <div>
+    <span class="eyebrow">Driver workspace</span>
+    <h1>Hello, {{ session.name }} <span class="wave">👋</span></h1>
+    <p>Your assigned trips for today &mdash; tap <b>Open trip</b> to start and share your GPS live with dispatch and passengers.</p>
+  </div>
+  <span class="status success">Ready for duty</span>
+</div>
+
+<div class="driver-quickstats">
+  <div class="glass qs"><i class="bi bi-calendar-check"></i><div><b>{{ schedules|length }}</b><small>Assigned trips</small></div></div>
+  <div class="glass qs"><i class="bi bi-broadcast"></i><div><b>Live</b><small>GPS sharing</small></div></div>
+  <div class="glass qs"><i class="bi bi-tools"></i><div><b>Auto</b><small>Trip counter</small></div></div>
+</div>
+
+<div class="driver-cards">
+  {% for s in schedules %}
+  <article class="glass assigned-trip lift">
+    <div class="trip-emoji">🚌</div>
+    <div class="trip-info">
+      <span class="eyebrow">Scheduled departure</span>
+      <h2>{{ s.departure_label }}</h2>
+      <p><b>{{ s.route.origin if s.route else '—' }}</b> <i class="bi bi-arrow-right"></i> <b>{{ s.route.destination if s.route else '—' }}</b></p>
+      <p class="muted"><i class="bi bi-bus-front"></i> {{ s.bus.display_name if s.bus else s.bus_id }}</p>
+    </div>
+    <a class="btn-primary-xl pulse-cta" href="/driver/trip/{{ s.trip_id }}">
+      <i class="bi bi-play-circle-fill"></i> Open &amp; start
+    </a>
+  </article>
+  {% else %}
+  <div class="glass empty">
+    <div style="font-size:56px">🛣️</div>
+    <h3>No assigned trips today</h3>
+    <p>New assignments from dispatch will appear here automatically.</p>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}

@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="page-head"><div><span class="eyebrow">Administration</span><h1>Orders &amp; Billing</h1><p>Every booking with customer details, seats, and the printable bill.</p></div></div>
+
+<form class="filters-row" method="get">
+  <input type="text" name="q" placeholder="Search customer or booking code…" value="{{ q }}">
+  <select name="status" onchange="this.form.submit()">
+    <option value="all" {% if status=='all' %}selected{% endif %}>All statuses</option>
+    <option value="pending" {% if status=='pending' %}selected{% endif %}>Pending</option>
+    <option value="confirmed" {% if status=='confirmed' %}selected{% endif %}>Confirmed</option>
+    <option value="cancelled" {% if status=='cancelled' %}selected{% endif %}>Cancelled</option>
+  </select>
+  <button class="btn-secondary"><i class="bi bi-search"></i> Filter</button>
+</form>
+
+<div class="glass table-wrap">
+  <table class="smart-table">
+    <thead><tr><th>Booking</th><th>Customer</th><th>Contact</th><th>Journey</th><th>Amount</th><th>Status</th><th>Created</th><th></th></tr></thead>
+    <tbody>
+      {% for o in rows %}
+      <tr class="clickable" onclick="location.href='/admin/orders/{{ o.id }}'">
+        <td>{{ o.booking_code }}</td>
+        <td>{{ o.customer_name }}</td>
+        <td>{{ o.customer_phone }}<br><small style="color:var(--muted)">{{ o.customer_email }}</small></td>
+        <td>{{ o.route_label }}</td>
+        <td>LKR {{ o.total_amount }}</td>
+        <td><span class="badge-status {{ o.status }}">{{ o.status }}</span></td>
+        <td>{{ o.created_at }}</td>
+        <td><a href="/admin/orders/{{ o.id }}"><i class="bi bi-receipt"></i> View bill</a></td>
+      </tr>
+      {% else %}<tr><td colspan="8">No orders match your filters.</td></tr>{% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

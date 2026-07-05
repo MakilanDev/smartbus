@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <span class="eyebrow">Administration</span>
+    <h1>Edit {{module}}</h1>
+    <p>Update this record's details below.</p>
+  </div>
+  <a href="{{ url_for('admin.module', module=slug) }}" class="btn-primary-xl" style="background:#555">Back to {{module}}</a>
+</div>
+
+<div class="glass table-wrap" style="padding:24px">
+  <form method="post" enctype="multipart/form-data">
+    {% for f in fields %}
+      {% set name=f[0] %}{% set label=f[1] %}{% set ftype=f[2] %}
+      <label style="display:block;margin-bottom:16px">{{label}}
+        {% if ftype in ('select','select_table') %}
+          <select name="{{name}}">
+            <option value="">Select…</option>
+            {% for value,text in options.get(name,[]) %}
+              <option value="{{value}}" {% if row.get(name)|string == value|string %}selected{% endif %}>{{text}}</option>
+            {% endfor %}
+          </select>
+        {% elif ftype == 'file' %}
+          {% if row.get(name ~ '_url') %}<div><img src="{{ row.get(name ~ '_url') }}" alt="" style="width:64px;height:64px;object-fit:cover;border-radius:8px;margin-bottom:6px"></div>{% endif %}
+          <input type="file" name="{{name}}" accept="image/*">
+        {% elif ftype == 'password' %}
+          <input type="password" name="{{name}}" autocomplete="new-password" placeholder="Leave blank to keep current password">
+        {% elif ftype == 'number' %}
+          <input type="number" step="any" name="{{name}}" value="{{ row.get(name, '') }}">
+        {% elif ftype in ('date','datetime-local') %}
+          <input type="{{ftype}}" name="{{name}}" value="{{ row.get(name, '')|string|truncate(16, True, '') if ftype=='datetime-local' else row.get(name, '') }}">
+        {% else %}
+          <input type="text" name="{{name}}" value="{{ row.get(name, '') }}">
+        {% endif %}
+      </label>
+    {% endfor %}
+    <button class="btn-primary-xl">Save changes</button>
+  </form>
+</div>
+{% endblock %}

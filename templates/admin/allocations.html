@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+{% block head %}<script async defer src="https://maps.googleapis.com/maps/api/js?key={{maps_key}}&libraries=geocoding,geometry&callback=initAllocMap&loading=async"></script>{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <span class="eyebrow">Administration</span>
+    <h1>Route Allocation</h1>
+    <p>Exactly which driver and route is assigned to each bus, plus a live map to allocate stops along any route (e.g. Jaffna → Colombo).</p>
+  </div>
+  <a class="btn-primary-xl" href="/admin/module/schedules"><i class="bi bi-plus-lg"></i> New allocation</a>
+</div>
+
+{% if conflicts %}
+<div class="glass" style="padding:18px 22px;margin-bottom:18px;border-color:rgba(251,113,133,.5)">
+  <b style="color:var(--red)"><i class="bi bi-exclamation-triangle"></i> Double-booked buses:</b>
+  {{ conflicts|join(', ') }} — these buses have more than one schedule pointing at the same departure time. Edit them in Schedules.
+</div>
+{% endif %}
+
+<div class="alloc-layout">
+  <div class="glass route-picker" id="routePicker">
+    {% for r in routes %}
+    <div class="route-chip" data-route-id="{{ r.id }}" data-route-name="{{ r.origin }} → {{ r.destination }}">
+      <div><b>{{ r.origin }} → {{ r.destination }}</b><small>{{ r.distance_km }} km · {{ r.duration_minutes }} min</small></div>
+      <i class="bi bi-chevron-right"></i>
+    </div>
+    {% else %}
+    <div class="empty"><i class="bi bi-signpost-split"></i><p>Add a route first under Routes.</p></div>
+    {% endfor %}
+  </div>
+  <div>
+    <div class="glass alloc-map-card"><div id="allocMap"></div><div class="map-hint"><i class="bi bi-info-circle"></i> Select a route, then click anywhere on the map to allocate a new stop for it.</div></div>
+    <div class="glass stop-list mt-3" id="stopList"><div class="empty" style="padding:20px"><i class="bi bi-geo-alt"></i><p>Select a route on the left to see and allocate its stops.</p></div></div>
+  </div>
+</div>
+
+<form id="addStopForm" method="post" action="{{ url_for('admin.add_stop') }}" style="display:none">
+  <input type="hidden" name="route_id" id="stopRouteId">
+  <input type="hidden" name="stop_name" id="stopName">
+  <input type="hidden" name="latitude" id="stopLat">
+  <input type="hidden" name="longitude" id="stopLng">
+</form>
+
+<h2 class="mt-5">All allocations</h2>
+<div class="glass table-wrap">
+  <table class="smart-table">
+    <thead><tr>
+      <th>Bus</th><th>Registration</th><th>Route</th><th>Driver</th><th>License No</th><th>Departure</th><th>Trip Status</th>
+    </tr></thead>
+    <tbody>
+      {% for r in rows %}
+      <tr {% if r.bus in conflicts %}style="background:rgba(251,113,133,.08)"{% endif %}>
+        <td>{{ r.bus }}</td>
+        <td>{{ r.bus_reg }}</td>
+        <td>{{ r.route }}</td>
+        <td>{{ r.driver }}</td>
+        <td>{{ r.license_no }}</td>
+        <td>{{ r.departure_time }}</td>
+        <td>{{ r.trip_status }}</td>
+      </tr>
+      {% else %}
+      <tr><td colspan="7">No schedules created yet. Add one under Schedules.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}
+{% block scripts %}<script src="{{url_for('static',filename='js/allocations.js')}}"></script>{% endblock %}

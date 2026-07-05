@@ -1,0 +1,32 @@
+{% extends 'base.html' %}{% block head %}<script async defer src="https://maps.googleapis.com/maps/api/js?key={{maps_key}}&libraries=geometry&callback=initMap&loading=async"></script>{% endblock %}{% block content %}<div class="page-head fade-in-up"><div><span class="eyebrow">Active assignment</span><h1>{{route.origin if route else '—'}} → {{route.destination if route else '—'}}</h1><p>{{bus.registration_no if bus else '—'}} · {{bus.display_name if bus else 'SmartBus'}} · {{driver_name}}</p></div><span id="tripStatus" class="status">{{trip.status}}</span></div>
+
+<div class="driver-trip-grid"><div id="map" class="map-card glass" style="position:relative">
+  <div id="waitingOverlay" class="empty" style="position:absolute;inset:0;display:none;align-items:center;justify-content:center;flex-direction:column;background:rgba(23,32,58,.92);border-radius:inherit;z-index:5">
+    <i class="bi bi-hourglass-split"></i><h3>Map goes live once you start the trip</h3>
+  </div>
+  <div id="completedOverlay" class="empty" style="position:absolute;inset:0;display:none;align-items:center;justify-content:center;flex-direction:column;background:rgba(23,32,58,.92);border-radius:inherit;z-index:5">
+    <i class="bi bi-check-circle"></i><h3>Trip ended</h3>
+  </div>
+</div><aside class="glass control-panel">
+
+<div class="start-time-card"><i class="bi bi-clock-history"></i><div><small>{{ 'Actual start time' if started_label else 'Scheduled departure time' }}</small><strong id="startTimeText">{{ started_label or departure_label }}</strong></div></div>
+
+<button class="driver-action primary" data-action="start" id="startBtn" {% if trip.status not in ('scheduled',) %}disabled{% endif %}><i class="bi bi-play-fill"></i> Start trip</button>
+<small id="startWindowNote" class="text-muted" style="display:block;margin:-6px 0 10px"></small>
+<button class="driver-action" data-action="delay"><i class="bi bi-clock-history"></i> Mark delay</button>
+<button class="driver-action" data-action="breakdown"><i class="bi bi-exclamation-triangle"></i> Report breakdown</button>
+<button class="driver-action complete" data-action="complete"><i class="bi bi-check-lg"></i> Complete trip</button>
+<small id="gpsState"><i class="bi bi-broadcast"></i> GPS sharing starts with trip</small>
+</aside></div>
+<input type="hidden" id="tripId" value="{{trip.id}}">
+<input type="hidden" id="departureTime" value="{{schedule.departure_time if schedule else ''}}">
+<input type="hidden" id="trackingStatus" value="{{trip.status}}">
+<input type="hidden" id="adminMode" value="false">
+<input type="hidden" id="originLat" value="{{ stops[0].latitude if stops else '' }}">
+<input type="hidden" id="originLng" value="{{ stops[0].longitude if stops else '' }}">
+<input type="hidden" id="destLat" value="{{ stops[-1].latitude if stops else '' }}">
+<input type="hidden" id="destLng" value="{{ stops[-1].longitude if stops else '' }}">
+<input type="hidden" id="originName" value="{{ route.origin if route else '' }}">
+<input type="hidden" id="destName" value="{{ route.destination if route else '' }}">
+<script id="waypointsData" type="application/json">{{ (stops[1:-1] if stops and stops|length > 2 else []) | tojson }}</script>
+{% endblock %}{% block scripts %}<script src="{{url_for('static',filename='js/tracking.js')}}"></script><script src="{{url_for('static',filename='js/driver.js')}}"></script>{% endblock %}

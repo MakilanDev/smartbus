@@ -1,0 +1,127 @@
+{% extends 'base.html' %}
+{% block content %}
+<section class="hero-v2">
+  <div class="hero-bg-blob a"></div>
+  <div class="hero-bg-blob b"></div>
+  <div class="hero-bg-blob c"></div>
+
+  <div class="hero-copy-v2 reveal">
+    <span class="eyebrow shimmer"><i class="bi bi-stars"></i> Sri Lanka&rsquo;s smarter way to travel</span>
+    <h1>
+      <span class="hl-1">Book</span> your bus,<br>
+      <span class="hl-2">Track</span> your journey,<br>
+      travel <span class="hl-3">smarter</span> <span class="wave">🚌</span>
+    </h1>
+    <p class="lead">
+      Reserve the perfect seat, board at any stop along the route, and watch
+      your bus arrive live on the map &mdash; without the guesswork.
+    </p>
+    <div class="cta-row">
+      <a href="/route-search" class="btn-primary-xl pulse-cta"><i class="bi bi-search"></i> Find a bus</a>
+      <a href="/live-tracking" class="btn-ghost-xl"><i class="bi bi-broadcast-pin"></i> Track live</a>
+    </div>
+    <div class="trust-row">
+      <span><i class="bi bi-shield-check"></i> Secure booking</span>
+      <span><i class="bi bi-broadcast"></i> Live GPS</span>
+      <span><i class="bi bi-signpost-split"></i> Any stop, any leg</span>
+    </div>
+  </div>
+
+  <div class="hero-visual-v2 float-slow">
+    <svg viewBox="0 0 420 320" class="hero-illus" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="gsky" x1="0" x2="0" y1="0" y2="1">
+          <stop offset="0" stop-color="#fde68a"/><stop offset="1" stop-color="#fca5a5"/>
+        </linearGradient>
+        <linearGradient id="groad" x1="0" x2="1"><stop offset="0" stop-color="#334155"/><stop offset="1" stop-color="#0f172a"/></linearGradient>
+        <linearGradient id="gbus" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#fbbf24"/><stop offset="1" stop-color="#f59e0b"/></linearGradient>
+      </defs>
+      <circle cx="330" cy="80" r="46" fill="url(#gsky)"/>
+      <g opacity=".85">
+        <circle cx="80" cy="70" r="18" fill="#fff"/><circle cx="100" cy="70" r="22" fill="#fff"/><circle cx="122" cy="70" r="16" fill="#fff"/>
+        <circle cx="260" cy="50" r="14" fill="#fff"/><circle cx="278" cy="50" r="18" fill="#fff"/>
+      </g>
+      <g class="mountain"><path d="M0 220 L90 130 L170 210 L240 150 L340 230 L420 180 L420 320 L0 320 Z" fill="#0f766e" opacity=".55"/></g>
+      <path d="M0 260 L420 260" stroke="url(#groad)" stroke-width="60"/>
+      <g class="dashes"><path d="M0 260 L420 260" stroke="#fde68a" stroke-width="3" stroke-dasharray="18 18"/></g>
+      <g class="bus-drive">
+        <g transform="translate(150 200)">
+          <rect x="0" y="0" width="140" height="52" rx="10" fill="url(#gbus)" stroke="#78350f" stroke-width="2"/>
+          <rect x="8" y="8" width="30" height="20" rx="3" fill="#0ea5e9" opacity=".9"/>
+          <rect x="44" y="8" width="30" height="20" rx="3" fill="#0ea5e9" opacity=".9"/>
+          <rect x="80" y="8" width="30" height="20" rx="3" fill="#0ea5e9" opacity=".9"/>
+          <rect x="116" y="8" width="18" height="20" rx="3" fill="#0ea5e9" opacity=".9"/>
+          <text x="70" y="46" text-anchor="middle" font-family="Inter" font-weight="900" font-size="12" fill="#78350f">SMARTBUS</text>
+          <circle cx="30" cy="58" r="10" fill="#111"/><circle cx="30" cy="58" r="4" fill="#666"/>
+          <circle cx="110" cy="58" r="10" fill="#111"/><circle cx="110" cy="58" r="4" fill="#666"/>
+        </g>
+      </g>
+      <g class="pin"><circle cx="360" cy="240" r="8" fill="#ef4444"/><path d="M360 248 L354 262 L366 262 Z" fill="#ef4444"/></g>
+    </svg>
+    <div class="float-card v2"><span class="pulse-dot"></span><div><small>Live now</small><b>Jaffna → Colombo</b></div><strong>08:00</strong></div>
+  </div>
+</section>
+
+<section class="search-panel glass reveal">
+  <form action="/route-search" class="search-grid">
+    <label><span>From</span><div><i class="bi bi-geo-alt"></i><input name="from" placeholder="Leaving from" required></div></label>
+    <label><span>To</span><div><i class="bi bi-geo"></i><input name="to" placeholder="Going to" required></div></label>
+    <label><span>Date</span><div><i class="bi bi-calendar3"></i><input type="date" name="date" required></div></label>
+    <button class="btn-primary-xl"><i class="bi bi-search"></i> Find buses</button>
+  </form>
+</section>
+
+<section class="section reveal">
+  <div class="section-heading">
+    <div><span class="eyebrow">Top destinations</span><h2>Popular routes</h2></div>
+    <a href="/route-search">View all <i class="bi bi-arrow-right"></i></a>
+  </div>
+  <div class="route-grid">
+    {% for a,b,t,p,emo in [('Jaffna','Colombo','7h','2,800','🌴'),('Colombo','Jaffna','7h','2,800','🏝️'),('Colombo','Kandy','3h 30m','1,200','⛰️'),('Kandy','Colombo','3h 30m','1,200','🏙️')] %}
+    <a href="/route-search?from={{a}}&to={{b}}" class="route-card glass lift">
+      <div class="route-icon big">{{emo}}</div>
+      <b>{{a}} <i class="bi bi-arrow-right"></i> {{b}}</b>
+      <span>{{t}} · from LKR {{p}}</span>
+    </a>
+    {% endfor %}
+  </div>
+</section>
+
+<section class="section reveal">
+  <div class="section-heading">
+    <div><span class="eyebrow">Everything in one place</span><h2>A better bus journey</h2></div>
+  </div>
+  <div class="feature-grid">
+    <article class="feature-card glass highlight lift"><i class="bi bi-signpost-split"></i><h3>Board &amp; alight anywhere</h3><p>Pick any stop along the route (e.g. Vavuniya → Colombo) and pay only for that leg.</p></article>
+    <article class="feature-card glass lift"><i class="bi bi-broadcast-pin"></i><h3>Live GPS 🚌</h3><p>See exactly where your bus is, in real time on the map.</p></article>
+    <article class="feature-card glass lift"><i class="bi bi-grid-3x3-gap"></i><h3>Seat booking</h3><p>Interactive map — pick the seat that feels right.</p></article>
+    <article class="feature-card glass lift"><i class="bi bi-file-earmark-pdf"></i><h3>PDF e-ticket</h3><p>Your ticket, ready instantly with QR &amp; booking code.</p></article>
+    <article class="feature-card glass lift"><i class="bi bi-map"></i><h3>Route &amp; stop map</h3><p>Every stop plotted A → Z along the way.</p></article>
+    <article class="feature-card glass lift"><i class="bi bi-fuel-pump"></i><h3>Smart fleet</h3><p>Automatic fuel, maintenance &amp; delay reports for admins.</p></article>
+  </div>
+</section>
+
+<section class="section stats-band reveal">
+  <div class="stat-pill glass"><b>25k+</b><span>Happy riders</span></div>
+  <div class="stat-pill glass"><b>120+</b><span>Daily trips</span></div>
+  <div class="stat-pill glass"><b>60+</b><span>Routes covered</span></div>
+  <div class="stat-pill glass"><b>4.8★</b><span>Rider rating</span></div>
+</section>
+
+<section class="section cta-band reveal">
+  <div class="glass cta-box">
+    <div>
+      <span class="eyebrow">Ready to ride?</span>
+      <h2>Book your seat in under a minute.</h2>
+    </div>
+    <a href="/route-search" class="btn-primary-xl pulse-cta"><i class="bi bi-ticket-perforated"></i> Book now</a>
+  </div>
+</section>
+{% endblock %}
+{% block scripts %}
+<script>
+// Reveal-on-scroll for .reveal blocks
+const io = new IntersectionObserver(es => es.forEach(e => e.isIntersecting && e.target.classList.add('in')), { threshold:.15 });
+document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+</script>
+{% endblock %}

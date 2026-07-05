@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="print-bar">
+  <a class="btn-secondary" href="{{ url_for('admin.orders') }}"><i class="bi bi-arrow-left"></i> Back to orders</a>
+  <button class="btn-primary-xl" onclick="window.print()"><i class="bi bi-printer"></i> Print bill</button>
+</div>
+
+<div class="glass invoice">
+  <div class="invoice-head">
+    <div>
+      <span class="brand"><i class="bi bi-bus-front-fill"></i> SmartBus</span>
+      <h1>Bill / Invoice</h1>
+      <span class="status {{ 'success' if booking.status=='confirmed' else 'warning' if booking.status=='pending' else 'danger' }}"><i></i> {{ booking.status|upper }}</span>
+    </div>
+    <div style="text-align:right">
+      <small style="color:var(--muted)">Booking ID</small>
+      <p style="margin:4px 0;font-weight:800;font-size:20px">{{ booking.booking_code }}</p>
+      <small style="color:var(--muted)">{{ booking.created_at }}</small>
+    </div>
+  </div>
+
+  <div class="invoice-grid">
+    <div class="invoice-block">
+      <small>Customer details</small>
+      <p>{{ customer.full_name if customer else '—' }}</p>
+      <p style="font-weight:400;color:var(--muted)">{{ customer.email if customer else '—' }}</p>
+      <p style="font-weight:400;color:var(--muted)">{{ customer.phone if customer else '—' }}</p>
+    </div>
+    <div class="invoice-block">
+      <small>Journey</small>
+      <p>{{ origin_label }} → {{ destination_label }}</p>
+      <p style="font-weight:400;color:var(--muted)">{{ schedule.departure_time if schedule else '—' }}</p>
+      <p style="font-weight:400;color:var(--muted)">Bus: {{ bus.display_name if bus else '—' }} ({{ bus.registration_no if bus else '—' }})</p>
+      <p style="font-weight:400;color:var(--muted)">Driver: {{ driver.full_name if driver else '—' }}</p>
+    </div>
+  </div>
+
+  <table class="invoice-table">
+    <thead><tr><th>Description</th><th>Seats</th><th style="text-align:right">Amount</th></tr></thead>
+    <tbody>
+      <tr>
+        <td>{{ origin_label }} → {{ destination_label }} bus fare</td>
+        <td>{{ seat_names|join(', ') if seat_names else '—' }}</td>
+        <td style="text-align:right">LKR {{ '%.2f'|format(booking.total_amount) }}</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="invoice-total"><span>Total paid</span> LKR {{ '%.2f'|format(booking.total_amount) }}</div>
+
+  <div style="margin-top:28px;padding-top:18px;border-top:1px dashed var(--border);color:var(--muted);font-size:13px">
+    <p><i class="bi bi-credit-card"></i> Payment: {{ 'PAID (' + (payment.test_reference or 'TEST') + ')' if payment else 'Awaiting payment' }}</p>
+    <p><i class="bi bi-shield-check"></i> Thank you for travelling with SmartBus. Arrive 20 minutes before departure with photo ID.</p>
+  </div>
+</div>
+{% endblock %}

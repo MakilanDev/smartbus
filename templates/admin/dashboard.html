@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+{% block head %}<script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.0/dist/chart.umd.min.js"></script>{% endblock %}
+{% block content %}
+<div class="page-head"><div><span class="eyebrow">Fleet overview</span><h1>Good morning, Admin</h1><p>Here is what is happening across SmartBus today.</p></div><div class="date-chip"><i class="bi bi-calendar3"></i> Today</div></div>
+<div id="statCards" class="stat-grid">
+  <div class="stat-card glass"><i class="bi bi-people"></i><span>Customers</span><strong>—</strong></div>
+  <div class="stat-card glass"><i class="bi bi-bus-front"></i><span>Active buses</span><strong>—</strong></div>
+  <div class="stat-card glass"><i class="bi bi-map"></i><span>Trips</span><strong>—</strong></div>
+  <div class="stat-card glass"><i class="bi bi-cash-stack"></i><span>Revenue</span><strong>—</strong></div>
+  <div class="stat-card glass"><i class="bi bi-receipt"></i><span>Orders Today</span><strong>—</strong></div>
+  <div class="stat-card glass"><i class="bi bi-broadcast-pin"></i><span>Active GPS Buses</span><strong>—</strong></div>
+  <div class="stat-card glass"><i class="bi bi-map-fill"></i><span>Google Maps API</span><strong>—</strong></div>
+  <div class="stat-card glass"><i class="bi bi-clock-history"></i><span>Average Delay</span><strong>—</strong></div>
+  <div class="stat-card glass"><i class="bi bi-fuel-pump"></i><span>Fuel Cost Today</span><strong>—</strong></div>
+  <div class="stat-card glass"><i class="bi bi-signpost-split"></i><span>Active Trips</span><strong>—</strong></div>
+  <div class="stat-card glass"><i class="bi bi-person-check"></i><span>Online Drivers</span><strong>—</strong></div>
+</div>
+<div id="dieselWidget" class="diesel-widget" style="margin:20px 0">
+  <div class="icon">⛽</div>
+  <div>
+    <small>Today's diesel price</small>
+    <b id="dieselPrice">LKR —</b>
+  </div>
+  <a href="#" id="setDieselBtn"><i class="bi bi-pencil-square"></i> Update</a>
+</div>
+<script>
+async function loadDiesel(){
+  const r = await fetch('/api/admin/fuel-price/today'); const j = await r.json();
+  if (j.ok && j.data && j.data.price_per_litre){
+    document.getElementById('dieselPrice').textContent = 'LKR ' + Number(j.data.price_per_litre).toFixed(2) + ' /L';
+  } else { document.getElementById('dieselPrice').textContent = 'Not set'; }
+}
+document.getElementById('setDieselBtn').addEventListener('click', async (e)=>{
+  e.preventDefault();
+  const r = await Swal.fire({title:"Today's diesel price (LKR / litre)", input:'number', inputAttributes:{min:1,step:'0.01'}, showCancelButton:true, confirmButtonText:'Save'});
+  if(!r.isConfirmed) return;
+  const res = await fetch('/api/admin/fuel-price/set',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({price_per_litre:r.value})});
+  const j = await res.json();
+  if(j.ok){ Swal.fire('Saved','Diesel price updated for today.','success'); loadDiesel(); }
+  else { Swal.fire('Could not save', j.message||'Try again','error'); }
+});
+loadDiesel();
+</script>
+
+<div class="admin-grid">
+  <div class="glass chart-card"><div class="card-title"><div><span class="eyebrow">Performance</span><h3>Weekly bookings</h3></div><span class="status success">Live</span></div><canvas id="bookingChart"></canvas></div>
+  <div class="glass chart-card"><div class="card-title"><div><span class="eyebrow">Live fleet</span><h3>Bus status</h3></div><a href="/admin/gps-map">Map</a></div><div class="fleet-row"><span class="bus-dot moving"></span><div><b>NC-4581</b><small>Jaffna -> Colombo</small></div><span class="status success">Moving</span></div><div class="fleet-row"><span class="bus-dot idle"></span><div><b>WP-2017</b><small>Colombo Depot</small></div><span class="status">Idle</span></div></div>
+</div>
+<section class="mt-4">
+  <div class="section-heading"><div><span class="eyebrow">Latest activity</span><h2>Recent orders</h2></div><a href="{{ url_for('admin.orders') }}">View all <i class="bi bi-arrow-right"></i></a></div>
+  <div class="glass table-wrap">
+    <table class="smart-table">
+      <thead><tr><th>Booking</th><th>Customer</th><th>Amount</th><th>Status</th><th>Created</th></tr></thead>
+      <tbody>
+      {% for o in recent_orders %}
+        <tr class="clickable" onclick="location.href='/admin/orders/{{ o.id }}'"><td>{{ o.booking_code }}</td><td>{{ o.customer_name }}</td><td>LKR {{ o.total_amount }}</td><td><span class="badge-status {{ o.status }}">{{ o.status }}</span></td><td>{{ o.created_at }}</td></tr>
+      {% else %}<tr><td colspan="5">No orders yet.</td></tr>{% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endblock %}
+{% block scripts %}<script src="{{url_for('static',filename='js/admin.js')}}"></script>{% endblock %}

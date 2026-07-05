@@ -1,0 +1,129 @@
+/* Fix: native <select> options rendered by the OS use a light background,
+   so the modal's white-on-white text was invisible when the dropdown opened. */
+.modal-body select,
+.modal-body select option,
+.modal-body select optgroup {
+  color: #0f172a;
+  background: #ffffff;
+}
+.modal-body select {
+  /* Keep the field itself styled to match the dark modal chrome. */
+  background: transparent;
+  color: #ffffff;
+}
+/* Keep the bus emoji crisp on top of the SVG chip. */
+.bus-marker-label {
+  transform: translateY(-1px);
+  text-shadow: 0 1px 0 rgba(255,255,255,0.6);
+}
+/* ==========================================================================
+   SmartBus Enhancement Stylesheet
+   Layered on top of app.css. Adds new logo styles, home hero v2,
+   animations, driver/admin polish, and a bus-emoji themed accent palette.
+   ========================================================================== */
+
+:root{
+  --sb-yellow:#fbbf24;
+  --sb-orange:#f97316;
+  --sb-teal:#14b8a6;
+  --sb-sky:#0ea5e9;
+  --sb-pink:#f472b6;
+  --sb-ink:#0f172a;
+  --sb-grad-hero:linear-gradient(135deg,#fef3c7 0%,#fde68a 35%,#fca5a5 70%,#c084fc 100%);
+  --sb-grad-brand:linear-gradient(135deg,#fbbf24,#f97316);
+  --sb-shadow-lg:0 24px 60px -18px rgba(15,23,42,.35);
+  --sb-shadow-md:0 10px 30px -12px rgba(15,23,42,.25);
+}
+
+/* ---------- Logo ---------- */
+.sb-logo{display:inline-flex;align-items:center;gap:10px;line-height:1}
+.sb-logo svg{filter:drop-shadow(0 4px 10px rgba(249,115,22,.35));transition:transform .3s ease}
+.sb-logo:hover svg{transform:rotate(-6deg) scale(1.06)}
+.sb-word{font-family:'Inter',system-ui,sans-serif;font-weight:900;font-size:20px;letter-spacing:-.02em;color:var(--sb-ink)}
+.sb-word span{background:var(--sb-grad-brand);-webkit-background-clip:text;background-clip:text;color:transparent}
+.topbar .sb-word,.sidebar .sb-word{color:inherit}
+
+/* ---------- Global animations ---------- */
+@keyframes sb-float{0%,100%{transform:translateY(0)}50%{transform:translateY(-12px)}}
+@keyframes sb-drive{0%{transform:translateX(-40px)}100%{transform:translateX(40px)}}
+@keyframes sb-dash{to{stroke-dashoffset:-72}}
+@keyframes sb-pulse{0%,100%{box-shadow:0 0 0 0 rgba(249,115,22,.55)}70%{box-shadow:0 0 0 18px rgba(249,115,22,0)}}
+@keyframes sb-shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
+@keyframes sb-wave{0%,60%,100%{transform:rotate(0)}10%,30%{transform:rotate(14deg)}20%{transform:rotate(-8deg)}}
+@keyframes sb-rise{from{opacity:0;transform:translateY(28px)}to{opacity:1;transform:translateY(0)}}
+
+.reveal{opacity:0;transform:translateY(28px);transition:opacity .8s ease,transform .8s cubic-bezier(.2,.7,.2,1)}
+.reveal.in{opacity:1;transform:translateY(0)}
+.float-slow{animation:sb-float 6s ease-in-out infinite}
+.wave{display:inline-block;transform-origin:70% 70%;animation:sb-wave 2.6s ease-in-out infinite}
+.pulse-cta{animation:sb-pulse 2.2s ease-out infinite}
+.lift{transition:transform .3s ease,box-shadow .3s ease}
+.lift:hover{transform:translateY(-4px);box-shadow:var(--sb-shadow-lg)}
+.shimmer{background:linear-gradient(90deg,transparent,rgba(255,255,255,.55),transparent) ,var(--sb-grad-brand);background-size:200% 100%,100% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:sb-shimmer 3.5s linear infinite}
+
+/* ---------- Home hero v2 ---------- */
+.hero-v2{position:relative;display:grid;grid-template-columns:1.1fr 1fr;gap:48px;align-items:center;padding:56px 40px;border-radius:32px;background:var(--sb-grad-hero);overflow:hidden;margin-bottom:32px;box-shadow:var(--sb-shadow-lg)}
+.hero-bg-blob{position:absolute;border-radius:50%;filter:blur(70px);opacity:.55;pointer-events:none}
+.hero-bg-blob.a{width:340px;height:340px;background:#fb7185;top:-80px;right:-60px;animation:sb-float 8s ease-in-out infinite}
+.hero-bg-blob.b{width:260px;height:260px;background:#38bdf8;bottom:-60px;left:-40px;animation:sb-float 10s ease-in-out infinite reverse}
+.hero-bg-blob.c{width:200px;height:200px;background:#a78bfa;top:40%;left:40%;animation:sb-float 12s ease-in-out infinite}
+.hero-copy-v2{position:relative;z-index:2}
+.hero-copy-v2 h1{font-family:'Inter',sans-serif;font-weight:900;font-size:clamp(36px,5vw,64px);line-height:1.05;letter-spacing:-.03em;color:var(--sb-ink);margin:16px 0}
+.hero-copy-v2 .hl-1{background:linear-gradient(135deg,#f97316,#dc2626);-webkit-background-clip:text;background-clip:text;color:transparent}
+.hero-copy-v2 .hl-2{background:linear-gradient(135deg,#0ea5e9,#6366f1);-webkit-background-clip:text;background-clip:text;color:transparent}
+.hero-copy-v2 .hl-3{background:linear-gradient(135deg,#059669,#14b8a6);-webkit-background-clip:text;background-clip:text;color:transparent}
+.hero-copy-v2 .lead{font-size:18px;color:#334155;max-width:520px;line-height:1.6;margin-bottom:24px}
+.cta-row{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:22px}
+.btn-ghost-xl{display:inline-flex;align-items:center;gap:8px;padding:14px 22px;border-radius:16px;background:rgba(255,255,255,.6);backdrop-filter:blur(10px);color:var(--sb-ink);font-weight:700;text-decoration:none;transition:all .2s}
+.btn-ghost-xl:hover{background:#fff;transform:translateY(-2px)}
+.hero-copy-v2 .trust-row{display:flex;gap:18px;flex-wrap:wrap;color:#475569;font-size:14px;font-weight:600}
+.hero-visual-v2{position:relative;z-index:2}
+.hero-illus{width:100%;height:auto;max-width:520px;filter:drop-shadow(0 30px 40px rgba(15,23,42,.25))}
+.hero-illus .bus-drive{animation:sb-float 4s ease-in-out infinite}
+.hero-illus .dashes path{stroke-dasharray:18 18;animation:sb-dash 1.4s linear infinite}
+.float-card.v2{position:absolute;bottom:20px;right:0;background:#fff;padding:14px 18px;border-radius:16px;display:flex;align-items:center;gap:12px;box-shadow:var(--sb-shadow-lg);animation:sb-rise .6s ease-out both,sb-float 5s ease-in-out infinite;animation-delay:0s,.6s}
+.float-card.v2 small{display:block;color:#64748b;font-size:11px;font-weight:600;text-transform:uppercase}
+.float-card.v2 b{color:var(--sb-ink)}
+.float-card.v2 strong{margin-left:8px;color:#f97316;font-size:18px}
+.pulse-dot{width:10px;height:10px;background:#22c55e;border-radius:50%;box-shadow:0 0 0 0 rgba(34,197,94,.6);animation:sb-pulse 1.6s ease-out infinite}
+
+@media(max-width:900px){.hero-v2{grid-template-columns:1fr;padding:36px 24px}.hero-visual-v2{order:-1}}
+
+/* ---------- Route cards / popular routes ---------- */
+.route-card.lift .route-icon.big{font-size:34px;line-height:1}
+.route-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px}
+
+/* ---------- Stats band ---------- */
+.stats-band{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+.stat-pill{padding:20px;border-radius:18px;text-align:center}
+.stat-pill b{display:block;font-size:32px;font-weight:900;background:var(--sb-grad-brand);-webkit-background-clip:text;background-clip:text;color:transparent}
+.stat-pill span{font-size:13px;color:#64748b;font-weight:600}
+@media(max-width:700px){.stats-band{grid-template-columns:repeat(2,1fr)}}
+
+/* ---------- CTA band ---------- */
+.cta-band .cta-box{display:flex;align-items:center;justify-content:space-between;padding:36px;gap:24px;flex-wrap:wrap;background:linear-gradient(135deg,rgba(251,191,36,.12),rgba(249,115,22,.12));border:1px solid rgba(249,115,22,.2)}
+.cta-band .cta-box h2{margin:6px 0 0;font-size:28px;font-weight:900;color:var(--sb-ink)}
+
+/* ---------- Driver dashboard ---------- */
+.driver-quickstats{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:20px}
+.driver-quickstats .qs{padding:18px;display:flex;align-items:center;gap:14px}
+.driver-quickstats .qs i{font-size:26px;color:#f97316}
+.driver-quickstats .qs b{display:block;font-size:20px;font-weight:900;color:var(--sb-ink)}
+.driver-quickstats .qs small{color:#64748b;font-weight:600}
+.assigned-trip{display:grid;grid-template-columns:auto 1fr auto;gap:20px;align-items:center;padding:22px}
+.trip-emoji{font-size:52px;line-height:1;filter:drop-shadow(0 6px 10px rgba(0,0,0,.15))}
+.trip-info h2{margin:2px 0 6px;font-size:26px;font-weight:900}
+.trip-info .muted{color:#64748b;font-size:13px;margin:4px 0 0}
+@media(max-width:700px){.assigned-trip{grid-template-columns:1fr}.driver-quickstats{grid-template-columns:1fr}}
+
+/* ---------- Admin dashboard extras ---------- */
+.diesel-widget{padding:20px;border-radius:18px;background:linear-gradient(135deg,#0f172a,#1e293b);color:#fff;display:flex;align-items:center;gap:16px;box-shadow:var(--sb-shadow-md)}
+.diesel-widget .icon{width:56px;height:56px;border-radius:14px;background:var(--sb-grad-brand);display:flex;align-items:center;justify-content:center;font-size:28px}
+.diesel-widget b{display:block;font-size:24px;font-weight:900}
+.diesel-widget small{color:#94a3b8;font-weight:600;text-transform:uppercase;font-size:11px;letter-spacing:.05em}
+.diesel-widget a{margin-left:auto;padding:8px 14px;border-radius:10px;background:var(--sb-grad-brand);color:#78350f;font-weight:700;text-decoration:none;font-size:13px}
+
+/* ---------- Stat cards accent ---------- */
+.stat-card.glass{transition:transform .25s ease,box-shadow .25s ease;border:1px solid rgba(255,255,255,.15)}
+.stat-card.glass:hover{transform:translateY(-3px);box-shadow:var(--sb-shadow-lg)}
+.stat-card.glass strong{background:var(--sb-grad-brand);-webkit-background-clip:text;background-clip:text;color:transparent}

@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+{% block head %}<link rel="stylesheet" href="https://cdn.datatables.net/2.3.2/css/dataTables.dataTables.min.css">{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <span class="eyebrow">Administration</span>
+    <h1>{{module}}</h1>
+    <p>{% if readonly %}System-generated records — view only.{% else %}Manage every {{module|lower}} record in one place.{% endif %}</p>
+  </div>
+  {% if not readonly %}<button class="btn-primary-xl" data-bs-toggle="modal" data-bs-target="#recordModal"><i class="bi bi-plus-lg"></i> Add record</button>{% endif %}
+</div>
+
+<div class="glass table-wrap">
+  <table id="dataTable" class="smart-table">
+    <thead><tr>
+      {% if rows %}{% for k in rows[0].keys() %}<th>{{k.replace('_',' ')|title}}</th>{% endfor %}
+      {% else %}<th>Records</th>{% endif %}
+      {% if not readonly or slug == 'buses' %}<th>Actions</th>{% endif %}
+    </tr></thead>
+    <tbody>
+      {% for row in rows %}
+      <tr>
+        {% for k,v in row.items() %}
+          <td>{% if k.endswith('_url') and v %}<img src="{{v}}" alt="" style="width:48px;height:48px;object-fit:cover;border-radius:8px">{% else %}{{v}}{% endif %}</td>
+        {% endfor %}
+        {% if not readonly or slug == 'buses' %}
+        <td style="white-space:nowrap">
+          {% if slug == 'buses' %}<a href="{{ url_for('admin.seat_map', bus_id=row.id) }}" class="btn-primary-xl" style="padding:6px 10px;font-size:12px">Seat map</a>{% endif %}
+          {% if not readonly %}
+          <a href="{{ url_for('admin.module_edit', module=slug, record_id=row.id) }}" class="btn-primary-xl" style="padding:6px 10px;font-size:12px">Edit</a>
+          <form method="post" action="{{ url_for('admin.module_delete', module=slug, record_id=row.id) }}" style="display:inline" onsubmit="return confirm('Delete this record? This cannot be undone.');">
+            <button type="submit" class="btn-primary-xl" style="padding:6px 10px;font-size:12px;background:#c0392b">Delete</button>
+          </form>
+          {% endif %}
+        </td>
+        {% endif %}
+      </tr>
+      {% else %}
+      <tr><td>No records found.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{% if not readonly %}
+<div class="modal fade" id="recordModal">
+  <div class="modal-dialog">
+    <form method="post" enctype="multipart/form-data" class="modal-content dark-modal">
+      <div class="modal-header">
+        <h5>Add {{module}} record</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        {% for f in fields %}
+          {% set name=f[0] %}{% set label=f[1] %}{% set ftype=f[2] %}
+          <label>{{label}}
+            {% if ftype in ('select','select_table') %}
+              <select name="{{name}}">
+                <option value="">Select…</option>
+                {% for value,text in options.get(name,[]) %}<option value="{{value}}">{{text}}</option>{% endfor %}
+              </select>
+            {% elif ftype == 'file' %}
+              <input type="file" name="{{name}}" accept="image/*">
+            {% elif ftype == 'password' %}
+              <input type="password" name="{{name}}" autocomplete="new-password">
+            {% elif ftype == 'number' %}
+              <input type="number" step="any" name="{{name}}">
+            {% elif ftype in ('date','datetime-local') %}
+              <input type="{{ftype}}" name="{{name}}">
+            {% else %}
+              <input type="text" name="{{name}}">
+            {% endif %}
+          </label>
+        {% endfor %}
+      </div>
+      <div class="modal-footer"><button class="btn-primary-xl">Save record</button></div>
+    </form>
+  </div>
+</div>
+{% endif %}
+{% endblock %}
+{% block scripts %}<script src="https://cdn.datatables.net/2.3.2/js/dataTables.min.js"></script><script>new DataTable('#dataTable',{responsive:true,pageLength:10});</script>{% endblock %}

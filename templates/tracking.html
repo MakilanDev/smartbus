@@ -1,0 +1,37 @@
+{% extends 'base.html' %}{% block head %}<script async defer src="https://maps.googleapis.com/maps/api/js?key={{maps_key}}&libraries=geometry&callback=initMap&loading=async"></script>{% endblock %}{% block content %}<div class="page-head fade-in-up"><div><span class="eyebrow">Live journey</span><h1>{% if admin_mode %}Fleet GPS Map{% else %}Track your bus{% endif %}</h1><p>Live position updates once the driver starts the trip.</p></div><span class="live-badge" id="liveBadge" style="display:none"><i></i> LIVE</span></div>
+
+{% if no_active_trip %}
+<div class="empty glass" style="padding:40px"><i class="bi bi-bus-front"></i><h3>No active booking to track</h3><p>Once you've paid for a ticket, its tracking link will show up here and in your confirmation email.</p><a href="/route-search">Find a bus</a></div>
+{% elif admin_mode and not trip_id %}
+<div class="glass" style="padding:16px 24px;margin-bottom:18px;display:flex;align-items:center;gap:12px"><label style="font-weight:700">Jump to a live trip</label><select id="adminTripPicker" style="min-width:260px"><option value="">Loading active trips…</option></select></div>
+<div id="map" class="map-card glass" style="min-height:480px;position:relative">
+  <div id="noActiveFleet" class="empty" style="position:absolute;inset:0;display:none;align-items:center;justify-content:center;flex-direction:column;background:rgba(23,32,58,.92);border-radius:inherit;z-index:5">
+    <i class="bi bi-broadcast"></i><h3>No buses are on an active trip right now</h3><p>The map fills in automatically as soon as a driver starts a trip.</p>
+  </div>
+</div>
+{% else %}
+<div class="tracking-layout"><div id="map" class="map-card glass" style="position:relative">
+  <div id="waitingOverlay" class="empty" style="position:absolute;inset:0;display:none;align-items:center;justify-content:center;flex-direction:column;background:rgba(23,32,58,.92);border-radius:inherit;z-index:5">
+    <i class="bi bi-hourglass-split"></i>
+    <h3 id="waitingTitle">Waiting for the driver to start the trip</h3>
+    <p id="waitingSub">The live map appears automatically the moment the trip starts.</p>
+  </div>
+  <div id="completedOverlay" class="empty" style="position:absolute;inset:0;display:none;align-items:center;justify-content:center;flex-direction:column;background:rgba(23,32,58,.92);border-radius:inherit;z-index:5">
+    <i class="bi bi-check-circle"></i>
+    <h3>This trip has ended</h3>
+    <p>Live tracking is no longer available for this journey.</p>
+  </div>
+</div><aside class="trip-panel glass"><span class="eyebrow">{{ route.name if route else 'SmartBus' }}</span><h2>{{ route.origin if route else '—' }} <i class="bi bi-arrow-right"></i> {{ route.destination if route else '—' }}</h2><div class="driver-line"><span class="avatar">{{ (driver_name or 'D')[0] }}</span><div><b>{{ driver_name or 'Driver' }}</b><small>{{ bus.display_name if bus else 'SmartBus' }} · {{ bus.registration_no if bus else '' }}</small></div></div><div class="progress-stops">{% if stops %}{% for s in stops %}<div class="{{ 'done' if loop.first else '' }}" data-stop-index="{{ loop.index0 }}"><i></i><b>{{ s.stop_name }}</b><small class="stop-state">{{ 'Departed' if loop.first else 'Upcoming' }}</small></div>{% endfor %}{% else %}<div class="done"><i></i><b>{{ route.origin if route else 'Origin' }}</b><small>Departed</small></div><div><i></i><b>{{ route.destination if route else 'Destination' }}</b><small>Destination</small></div>{% endif %}</div><div class="eta"><div><small>Estimated arrival</small><strong id="etaText">Waiting for trip to start</strong></div><span id="onTimeBadge">Scheduled</span></div></aside></div>
+<input type="hidden" id="tripId" value="{{trip_id}}">
+<input type="hidden" id="trackingStatus" value="{{trip_status or ('scheduled')}}">
+<input type="hidden" id="originLat" value="{{ stops[0].latitude if stops else '' }}">
+<input type="hidden" id="originLng" value="{{ stops[0].longitude if stops else '' }}">
+<input type="hidden" id="destLat" value="{{ stops[-1].latitude if stops else '' }}">
+<input type="hidden" id="destLng" value="{{ stops[-1].longitude if stops else '' }}">
+<input type="hidden" id="originName" value="{{ route.origin if route else '' }}">
+<input type="hidden" id="destName" value="{{ route.destination if route else '' }}">
+<input type="hidden" id="waypoints" value='{{ (stops[1:-1] | map(attribute="latitude") | list) if stops and stops|length > 2 else "" }}'>
+<script id="waypointsData" type="application/json">{{ (stops[1:-1] if stops and stops|length > 2 else []) | tojson }}</script>
+{% endif %}
+<input type="hidden" id="adminMode" value="{{ 'true' if admin_mode else 'false' }}">
+{% endblock %}{% block scripts %}<script src="{{url_for('static',filename='js/tracking.js')}}"></script>{% endblock %}
