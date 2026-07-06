@@ -147,11 +147,14 @@ class Database:
         if self.client is None and create_client:
             u = current_app.config.get("SUPABASE_URL")
             k = current_app.config.get("SUPABASE_KEY")
-            if u and k:
+            if not u or not k:
+                print("[SmartBus DB] WARNING: SUPABASE_URL/SUPABASE_KEY missing — using in-memory demo data (data will NOT persist).")
+            else:
                 try:
                     self.client = create_client(u, k)
-                except Exception:
-                    pass
+                    print("[SmartBus DB] Connected to Supabase successfully.")
+                except Exception as e:
+                    print(f"[SmartBus DB] ERROR: Supabase connection failed ({e}) — falling back to in-memory demo data (data will NOT persist).")
         return self.client
 
     def all(self, table, **eq):

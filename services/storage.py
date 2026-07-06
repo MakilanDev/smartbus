@@ -12,6 +12,8 @@ def upload(file, bucket="bus-assets", folder="uploads"):
         client.storage.from_(bucket).upload(name, file.read(), {"content-type": file.mimetype, "upsert": "true"})
         return client.storage.from_(bucket).get_public_url(name)
     # Local fallback so photo uploads still work without Supabase configured.
+    print(f"[SmartBus Storage] WARNING: Supabase not connected — saving '{file.filename}' to local disk. "
+          f"This file will be LOST on the next restart/redeploy/sleep on Render.")
     safe_ext = os.path.splitext(file.filename)[1][:10] or ".jpg"
     filename = f"{uuid.uuid4().hex}{safe_ext}"
     upload_dir = os.path.join(current_app.root_path, "static", "uploads", folder)

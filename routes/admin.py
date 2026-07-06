@@ -293,13 +293,30 @@ def _collect_form_data(table, fields, editing_id=None):
 
 def _display_rows(module, table):
     rows = db.all(table)
+    if module == "users":
+        # The Users module is for customers only — drivers and admins have
+        # their own dedicated modules/login flows.
+        rows = [r for r in rows if r.get("role") == "customer"]
     if table == "drivers":
         for row in rows:
             u = db.one("users", id=row.get("user_id"))
             row["driver_name"] = u.get("full_name") if u else "—"
             row["email"] = u.get("email") if u else "—"
             row["phone"] = u.get("phone") if u else "—"
-    return rows
+    if not rows:
+        return rows
+    # Normalize every row to the SAME set of columns, in the SAME order.
+    # Without this, a manually-added record whose fields were built in a
+    # different order (or skipped optional/blank fields, e.g. no photo
+    # uploaded) renders its values under the wrong headers — which is why
+    # a manually added driver looked "different" from the seeded ones.
+    columns, seen = [], set()
+    for row in rows:
+        for k in row.keys():
+            if k not in seen:
+                seen.add(k)
+                columns.append(k)
+    return [{col: row.get(col, "") for col in columns} for row in rows]
 
 
 @admin_bp.route("/module/<module>", methods=["GET", "POST"])
