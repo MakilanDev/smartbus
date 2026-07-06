@@ -143,9 +143,10 @@ def system_integrations():
 @admin_bp.get("/system-health")
 @role_required("admin")
 def system_health():
+    supabase_connected = bool(db.connect())
     health = [
         {"name": "Google Maps API", "status": _status(bool(current_app.config.get("GOOGLE_MAPS_API_KEY")))},
-        {"name": "Supabase Database", "status": _status(bool(current_app.config.get("SUPABASE_URL") and current_app.config.get("SUPABASE_KEY"))) if db.connect() else "ONLINE"},
+        {"name": "Supabase Database", "status": "ONLINE" if supabase_connected else "OFFLINE (using temporary in-memory data — will reset on restart)"},
         {"name": "GPS Tracking", "status": "ONLINE"},
         {"name": "PDF Generator", "status": "ONLINE"},
         {"name": "File Storage", "status": "ONLINE"},

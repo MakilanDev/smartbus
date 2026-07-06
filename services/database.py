@@ -1,9 +1,18 @@
+import json
 import math
+import os
 from datetime import datetime, timedelta, timezone
 from uuid import uuid4
 from flask import current_app
 try: from supabase import create_client
 except Exception: create_client = None
+
+# Where the in-memory demo store is snapshotted to disk. This is ONLY a
+# safety net for the no-Supabase / demo mode: it stops data from being
+# wiped on every simple process restart (e.g. a free-hosting idle spin-down
+# or a dev-server reload). It is NOT a substitute for a real database —
+# a full redeploy or a host with an ephemeral filesystem will still lose it.
+_SNAPSHOT_PATH = os.path.join(os.path.dirname(__file__), "..", "instance", "mem_snapshot.json")
 
 
 def haversine_km(lat1, lng1, lat2, lng2):
@@ -20,7 +29,32 @@ def haversine_km(lat1, lng1, lat2, lng2):
 class Database:
     def __init__(self):
         self.client = None
-        self.mem = self._seed()
+        self.mem = self._load_snapshot() or self._seed()
+
+    def _load_snapshot(self):
+        try:
+            with open(_SNAPSHOT_PATH, "r", encoding="utf-8") as f:
+                data = json.load(f)
+            print(f"[SmartBus DB] Restored in-memory demo data from local snapshot ({_SNAPSHOT_PATH}).")
+            return data
+        except FileNotFoundError:
+            return None
+        except Exception as e:
+            print(f"[SmartBus DB] WARNING: could not read local snapshot ({e}) — reseeding demo data.")
+            return None
+
+    def _persist_mem(self):
+        """Only meaningful in no-Supabase/demo mode. Writes self.mem to disk
+        so a process restart restores the last state instead of resetting to
+        the original seed data. No-op cost is low; called after every mem write."""
+        if self.client:
+            return
+        try:
+            os.makedirs(os.path.dirname(_SNAPSHOT_PATH), exist_ok=True)
+            with open(_SNAPSHOT_PATH, "w", encoding="utf-8") as f:
+                json.dump(self.mem, f)
+        except Exception as e:
+            print(f"[SmartBus DB] WARNING: could not write local snapshot ({e}).")
 
     def _seed(self):
         now = datetime.now(timezone.utc)
@@ -144,17 +178,44 @@ class Database:
         }
 
     def connect(self):
-        if self.client is None and create_client:
-            u = current_app.config.get("SUPABASE_URL")
-            k = current_app.config.get("SUPABASE_KEY")
-            if not u or not k:
-                print("[SmartBus DB] WARNING: SUPABASE_URL/SUPABASE_KEY missing — using in-memory demo data (data will NOT persist).")
-            else:
-                try:
-                    self.client = create_client(u, k)
-                    print("[SmartBus DB] Connected to Supabase successfully.")
-                except Exception as e:
-                    print(f"[SmartBus DB] ERROR: Supabase connection failed ({e}) — falling back to in-memory demo data (data will NOT persist).")
+        # _checked prevents retrying (and re-printing) on every single request
+        # once we already know the outcome for this process.
+        if getattr(self, "_checked", False):
+            return self.client
+        self._checked = True
+
+        if not create_client:
+            print("[SmartBus DB] WARNING: supabase package not installed — using in-memory demo data (data will NOT persist).")
+            return None
+
+        u = current_app.config.get("SUPABASE_URL")
+        k = current_app.config.get("SUPABASE_KEY")
+        if not u or not k:
+            print("[SmartBus DB] WARNING: SUPABASE_URL/SUPABASE_KEY missing in this environment — using in-memory demo data (data will NOT persist).")
+            print("[SmartBus DB] NOTE: having values in your local .env is not enough — they must also be set as environment variables on your host (e.g. Render dashboard > Environment).")
+            return None
+
+        try:
+            client = create_client(u, k)
+            # create_client() only builds an object — it does NOT verify the
+            # URL/key are valid or that the network/DB is reachable. Run a
+            # cheap real query now so a bad key fails loudly at startup
+            # instead of silently falling back to memory later.
+            client.table("users").select("id").limit(1).execute()
+            self.client = client
+            print("[SmartBus DB] Connected to Supabase successfully (verified with test query).")
+        except Exception as e:
+            import traceback
+            print(f"[SmartBus DB] ERROR: Supabase connection/verification failed: {e}")
+            if "Invalid API key" in str(e) and k.startswith("sb_secret_"):
+                print("[SmartBus DB] FIX: your installed supabase-py version doesn't accept the new")
+                print("[SmartBus DB]      sb_secret_... key format. Go to Supabase Dashboard > Project")
+                print("[SmartBus DB]      Settings > API Keys > 'Legacy API Keys' tab, copy the")
+                print("[SmartBus DB]      service_role key (starts with 'eyJ...'), and put THAT in")
+                print("[SmartBus DB]      SUPABASE_KEY instead. Then restart the app.")
+            traceback.print_exc()
+            print("[SmartBus DB] Falling back to in-memory demo data — data will NOT persist and will reset on every restart.")
+            self.client = None
         return self.client
 
     def all(self, table, **eq):
@@ -175,17 +236,31 @@ class Database:
         data.setdefault("id", str(uuid4()))
         c = self.connect()
         if c:
-            return c.table(table).insert(data).execute().data[0]
+            try:
+                result = c.table(table).insert(data).execute().data[0]
+                self._persist_mem()
+                return result
+            except Exception as e:
+                print(f"[SmartBus DB] ERROR: insert into '{table}' failed ({e}). This record was NOT saved to Supabase.")
+                raise
         self.mem.setdefault(table, []).append(data)
+        self._persist_mem()
         return data.copy()
 
     def update(self, table, id, data):
         c = self.connect()
         if c:
-            return c.table(table).update(data).eq("id", id).execute().data[0]
+            try:
+                result = c.table(table).update(data).eq("id", id).execute().data[0]
+                self._persist_mem()
+                return result
+            except Exception as e:
+                print(f"[SmartBus DB] ERROR: update on '{table}' id={id} failed ({e}). This change was NOT saved to Supabase.")
+                raise
         row = self.one_ref(table, id)
         if row:
             row.update(data)
+            self._persist_mem()
         return row.copy() if row else None
 
     def delete(self, table, id):
@@ -193,12 +268,19 @@ class Database:
         editable module (users, drivers, buses, routes, stops, schedules...)."""
         c = self.connect()
         if c:
-            c.table(table).delete().eq("id", id).execute()
-            return True
+            try:
+                c.table(table).delete().eq("id", id).execute()
+                return True
+            except Exception as e:
+                print(f"[SmartBus DB] ERROR: delete from '{table}' id={id} failed ({e}). This was NOT removed from Supabase.")
+                raise
         lst = self.mem.get(table, [])
         before = len(lst)
         self.mem[table] = [x for x in lst if str(x.get("id")) != str(id)]
-        return len(self.mem[table]) != before
+        changed = len(self.mem[table]) != before
+        if changed:
+            self._persist_mem()
+        return changed
 
     def one_ref(self, table, id):
         return next((x for x in self.mem.get(table, []) if str(x.get("id")) == str(id)), None)
